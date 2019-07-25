@@ -1,0 +1,749 @@
+---
+title: "Exploratory Data Analysis Template"
+author: "Muuzaani Nkhoma"
+date: "July 5, 2019"
+output: html_document
+---
+
+
+Source: https://www.kaggle.com/uciml/student-alcohol-consumption
+        https://cran.r-project.org/web/packages/dlookr/dlookr.pdf
+        https://cran.r-project.org/web/packages/dlookr/vignettes/EDA.html
+
+
+### Load Packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(dlookr)                   # Exploratory Data Analysis
+library(DataExplorer)             # Exploratory Data Analysis
+library(GGally)                   # Parallel Coordinate Plots
+library(cluster)                  # For clustering algorithms
+library(factoextra)               # For visualization
+library(dendextend)               # For comparing two dendrograms
+library(magrittr)                 # For piping
+library(kknn)                     # For K-Nearest Neighbors Analysis
+library(e1071)                    # For Naive Bayes Algorithm
+library(class)
+library(MASS)                     # For Discriminant Analysis
+library(klaR)                     # For Discriminant Analysis
+ 
+```
+
+
+## Read and prepare the data
+
+### Dataset 1
+
+#### Import dataset 1
+```{r}
+print("Start importing dataset")
+
+d1=read_csv("Data/student-mat.csv", col_types = cols(
+  school = col_factor(),
+  sex = col_factor(),
+  age = col_double(),
+  address = col_factor(),
+  famsize = col_factor(),
+  Pstatus = col_factor(),
+  Medu = col_factor(),
+  Fedu = col_factor(),
+  Mjob = col_factor(),
+  Fjob = col_factor(),
+  reason = col_factor(),
+  guardian = col_factor(),
+  traveltime = col_factor(),
+  studytime = col_factor(),
+  failures = col_factor(),
+  schoolsup = col_factor(),
+  famsup = col_factor(),
+  paid = col_factor(),
+  activities = col_factor(),
+  nursery = col_factor(),
+  higher = col_factor(),
+  internet = col_factor(),
+  romantic = col_factor(),
+  famrel = col_factor(),
+  freetime = col_factor(),
+  goout = col_factor(),
+  Dalc = col_factor(),
+  Walc = col_factor(),
+  health = col_factor(),
+  absences = col_double(),
+  G1 = col_double(),
+  G2 = col_double(),
+  G3 = col_double()
+))
+
+dim(d1)
+ncol(d1)
+nrow(d1)
+names(d1)
+
+print("Finished importing dataset")
+
+```
+
+##View first observations
+
+```{r}
+head(d1)
+
+```
+
+#### View last observations
+```{r}
+tail(d1)
+
+```
+
+
+
+```{r}
+
+str(d1)
+
+```
+
+
+
+```{r}
+
+d1_list <- list(d1)
+plot_str(d1_list)
+
+```
+
+
+##### Descriptive Statistics
+
+
+```{r}
+
+introduce(d1)
+
+```
+
+
+
+```{r}
+
+plot_intro(d1)
+
+```
+
+
+```{r}
+
+summary(d1)
+
+```
+
+
+
+
+
+### CONTINUOUS VARIABLES   
+
+
+#### UNIVARIATE ANALYSIS
+
+
+```{r}
+
+find_class(d1, type = "numerical",  index = FALSE)
+
+```
+
+
+
+```{r}
+
+d1_num <- dplyr::select(d1, age, absences, G1, G2, G3)
+  
+```
+
+
+
+##### Graphical Analysis
+
+
+
+```{r}
+
+plot_histogram(d1)
+
+```
+
+
+
+```{r}
+
+plot_density(d1)
+
+```
+
+
+
+```{r}
+
+plot_qq(d1)
+
+```
+
+
+```{r}
+
+plot_normality(d1)
+
+```
+
+
+
+
+```{r}
+
+ggplot(d1, aes(x = factor(0), y = absences)) + 
+  geom_boxplot() + xlab("") + labs(title = "                                    Boxplot of First Period Grade")
+  scale_x_discrete(breaks = NULL)
+
+```
+
+
+
+
+```{r}
+
+boxplot(d1$G1, main = "Boxplot of First Period Grade", xlab = "Grade", ylab = "Count")
+
+```
+
+
+
+
+##### Non-graphical Analysis
+
+```{r}
+
+describe(d1)
+
+```
+
+
+
+```{r}
+
+diagnose_numeric(d1)
+
+```
+
+
+
+
+
+
+
+#### BIVARIATE ANALYSIS
+
+
+
+##### Graphical Analysis
+
+```{r}
+
+plot_correlate(d1)
+
+```
+
+
+
+```{r}
+
+pairs(d1_num)
+
+```
+
+
+
+```{r}
+
+plot_correlation(d1, type = "c")
+
+```
+
+
+
+```{r}
+
+plot_scatterplot(d1, by = "G3")
+
+```
+
+
+
+```{r}
+
+plot_boxplot(d1, by = "G3")
+
+```
+
+
+
+##### Non-graphical Analysis
+
+
+
+```{r}
+
+cor(d1_num)
+
+```
+
+
+
+
+
+
+### CATEGORICAL VARIABLES
+
+#### UNIVARIATE ANALYSIS
+
+```{r}
+
+find_class(d1, type = "categorical2",  index = FALSE)
+
+```
+
+
+
+
+##### Non-graphical Analysis
+
+```{r}
+
+diagnose_category(d1)
+
+```
+
+
+
+
+
+
+#### BIVARIATE ANALYSIS
+
+
+
+##### Graphical Analysis
+
+```{r}
+
+plot_bar(d1)
+
+```
+
+
+
+##### Non-graphical Analysis
+
+Contingency Tables
+
+```{r}
+
+d1.table <- table(d1$failures)
+d1.table
+
+```
+
+
+
+##### Graphical Analysis
+
+Mosaic Plot
+
+```{r}
+
+mosaicplot(d1.table, main = deparse(substitute(d1.table)))
+
+```
+
+
+
+
+
+#### Missing Values
+
+```{r}
+
+plot_missing(d1)
+
+```
+
+
+
+#### OUTLIERS
+
+```{r}
+
+find_outliers(d1)
+plot_outlier(d1)
+
+```
+
+
+
+
+### MULTIVARIATE ANALYSIS
+
+
+#### PARALLEL COORDINATE PLOTS
+
+```{r}
+
+ggparcoord(d1, columns = c(3, 30:33), groupColumn = "Medu")
+
+```
+
+
+
+### PRINCIPAL COMPONENT ANALYSIS
+
+```{r}
+
+plot_prcomp(d1_num)
+
+```
+
+
+#### Biplot
+
+```{r}
+
+biplot(prcomp(d1_num))
+
+```
+
+
+
+#### Screeplot
+
+```{r}
+
+screeplot(prcomp(d1_num), type = "lines")
+
+```
+
+
+
+## CLUSTER ANALYSIS
+
+### CLUSTERING METHODS
+
+#### HIERARCHICAL CLUSTERING  
+Note that agglomerative clustering is good at identifying small clusters. Divisive hierarchical clustering is good at identifying large clusters.
+
+
+#### Distance Matrix
+
+```{r}
+# Dissimilarity matrix
+distanceMatrix <- dist(d1_num, method = "euclidean")
+
+fviz_dist(distanceMatrix, 
+   gradient = list(low = "#00AFBB", mid = "white", high = "#FC4E07"))
+```
+
+
+#### Agglomerative Hierarchical Clustering
+
+```{r}
+
+# Hierarchical clustering using Complete Linkage
+hc1 <- hclust(distanceMatrix, method = "complete" )
+
+# Plot the obtained dendrogram
+plot(hc1, cex = 0.6, hang = -1)
+
+```
+
+
+##### Including Agglomerative Coefficient
+
+```{r}
+
+# Compute with agnes
+hc2 <- agnes(d1_num, method = "complete")
+
+# Agglomerative coefficient
+hc2$ac
+
+# Plot the obtained dendrogram
+pltree(hc2, cex = 0.6, hang = -1)
+
+```
+##### Model Assessment
+
+```{r}
+# methods to assess
+m <- c( "average", "single", "complete", "ward")
+names(m) <- c( "average", "single", "complete", "ward")
+
+# function to compute coefficient
+ac <- function(x) {
+  agnes(d1_num, method = x)$ac
+}
+
+map_dbl(m, ac)
+
+```
+
+
+##### Divisive Hierarchical Clustering
+
+
+```{r}
+# compute divisive hierarchical clustering
+hc4 <- diana(d1_num)
+
+# Divise coefficient; amount of clustering structure found
+hc4$dc
+
+# plot dendrogram
+pltree(hc4, cex = 0.6, hang = -1, main = "Dendrogram of diana")
+```
+
+#### PARTITIONING CLUSTERING
+
+##### Determining optimal number of clustering
+
+##### Gap Statistic
+
+```{r}
+
+fviz_nbclust(d1_num, kmeans, method = "gap_stat")
+```
+
+
+
+##### Elbow Method
+
+```{r}
+fviz_nbclust(d1_num, FUN = hcut, method = "wss")
+```
+
+
+```{r}
+
+set.seed(123)
+
+d1.km <- kmeans(d1_num, 3, nstart = 25)
+
+```
+
+
+##### Plot Clusters
+
+```{r}
+# Visualize
+library("factoextra")
+fviz_cluster(d1.km, data = d1_num,
+             ellipse.type = "convex",
+             palette = "jco",
+             ggtheme = theme_minimal())
+
+```
+
+
+```{r}
+
+fviz_cluster(d1.km, data = d1_num)
+
+```
+
+
+
+
+
+```{r}
+
+d1.km
+
+```
+
+
+
+
+```{r}
+
+d1_Cluster <- cbind(d1, d1.km$cluster) %>% # combine the original data and the clusters
+  mutate(Cluster = as_factor(d1.km$cluster)) %>%
+  dplyr::select(-"d1.km$cluster")
+
+  
+```
+
+
+
+```{r}
+
+ggparcoord(d1_Cluster, columns = c(3, 30:33), groupColumn = "Cluster", scale = "std")
+
+
+```
+
+
+
+
+
+## PREDICTIONS
+
+#### TARGET VARIABLE CATEGORICAL
+
+Set target variable as categorical
+
+```{r}
+
+categ <- target_by(d1, school)
+
+```
+
+
+
+#### NUMERIC PREDICTORS and CATEGORICAL TARGET
+
+```{r}
+
+cat_num <- relate(categ, G3)
+cat_num
+
+```
+
+
+```{r}
+
+cat_num1 <- relate(categ, c(G1, G2, G3))
+cat_num1
+
+```
+
+
+```{r}
+
+summary(cat_num)
+
+```
+
+
+```{r}
+
+plot(cat_num)
+
+```
+
+
+
+
+#### CATEGORICAL PREDICTORS and CATEGORICAL TARGET
+
+```{r}
+
+cat_cat <- relate(categ, Medu)
+cat_cat
+
+```
+
+
+
+```{r}
+
+plot(cat_cat)
+
+```
+
+
+
+
+#### TARGET VARIABLE NUMERICAL
+
+Set target variable as categorical
+
+```{r}
+
+num <- target_by(d1, G3)
+
+```
+
+
+
+#### NUMERIC PREDICTORS and NUMERICAL TARGET
+
+```{r}
+
+num_num <- relate(num, age)
+num_num
+
+```
+
+
+```{r}
+
+summary(num_num)
+
+```
+
+
+
+```{r}
+
+plot(num_num)
+
+```
+
+
+
+
+#### CATEGORICAL PREDICTORS and NUMERICAL TARGET
+
+```{r}
+
+num_cat <- relate(num, Medu)
+num_cat
+
+```
+
+
+
+```{r}
+
+summary(num_cat)
+
+```
+
+
+
+```{r}
+
+plot(num_cat)
+
+```
+
+
+
+
+
+
+## CREATING AND SAVING AN R OBJECT INTO A CSV FILE
+
+```{r}
+
+write.table(d1_Cluster, "Data/EDA Example.csv", sep = ",", row.names = F) # save as a .csv file
+
+```
+
+
+
+
+
+
